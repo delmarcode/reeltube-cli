@@ -128,9 +128,9 @@ func (c *Client) Delete(path string, params, target interface{}) (*APIResponse, 
 //
 
 // Me retrieves the current user's profile
-func (c *Client) Me() (*MeResponse, error) {
+func (c *Client) Me(ctx context.Context) (*MeResponse, error) {
 	var data MeResponse
-	_, err := c.Get("/api/v0/me", nil, &data)
+	_, err := c.DoRequestWithContext(ctx, "GET", "/api/v0/me", nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -138,13 +138,13 @@ func (c *Client) Me() (*MeResponse, error) {
 }
 
 // CreateMediaUpload initiates a multipart upload
-func (c *Client) CreateMediaUpload(fileName string, fileSize int64) (*CreateMediaUploadResponse, error) {
+func (c *Client) CreateMediaUpload(ctx context.Context, fileName string, fileSize int64) (*CreateMediaUploadResponse, error) {
 	var data CreateMediaUploadResponse
 	body := map[string]interface{}{
 		"filename": fileName,
 		"size":     fileSize,
 	}
-	_, err := c.Post("/api/v0/media_uploads", body, &data)
+	_, err := c.DoRequestWithContext(ctx, "POST", "/api/v0/media_uploads", body, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -152,13 +152,13 @@ func (c *Client) CreateMediaUpload(fileName string, fileSize int64) (*CreateMedi
 }
 
 // CompleteMultipartUpload completes a multipart upload
-func (c *Client) CompleteMultipartUpload(mediaUploadID, uploadID string, parts []Part) error {
+func (c *Client) CompleteMultipartUpload(ctx context.Context, mediaUploadID, uploadID string, parts []Part) error {
 	var data CompleteUploadResponse
 	body := CompleteUploadRequest{
 		UploadID: uploadID,
 		Parts:    parts,
 	}
-	_, err := c.Post(fmt.Sprintf("/api/v0/media_uploads/%s/complete", mediaUploadID), body, &data)
+	_, err := c.DoRequestWithContext(ctx, "POST", fmt.Sprintf("/api/v0/media_uploads/%s/complete", mediaUploadID), body, &data)
 	if err != nil {
 		return err
 	}
@@ -166,9 +166,9 @@ func (c *Client) CompleteMultipartUpload(mediaUploadID, uploadID string, parts [
 }
 
 // ListMediaUploads retrieves the user's media uploads
-func (c *Client) ListMediaUploads() (*ListMediaUploadsResponse, error) {
+func (c *Client) ListMediaUploads(ctx context.Context) (*ListMediaUploadsResponse, error) {
 	var data ListMediaUploadsResponse
-	_, err := c.Get("/api/v0/media_uploads", nil, &data)
+	_, err := c.DoRequestWithContext(ctx, "GET", "/api/v0/media_uploads", nil, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +176,9 @@ func (c *Client) ListMediaUploads() (*ListMediaUploadsResponse, error) {
 }
 
 // DeleteMediaUpload deletes a media upload by ID
-func (c *Client) DeleteMediaUpload(id string) error {
+func (c *Client) DeleteMediaUpload(ctx context.Context, id string) error {
 	var data map[string]interface{}
-	_, err := c.Delete(fmt.Sprintf("/api/v0/media_uploads/%s", id), nil, &data)
+	_, err := c.DoRequestWithContext(ctx, "DELETE", fmt.Sprintf("/api/v0/media_uploads/%s", id), nil, &data)
 	if err != nil {
 		return err
 	}

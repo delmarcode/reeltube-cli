@@ -140,7 +140,7 @@ func MultipartUpload(ctx context.Context, c *client.Client, filePath, fileName s
 	concurrency := systemConcurrency()
 
 	// Step 1: Get presigned URLs from API
-	createMediaUploadResp, err := c.CreateMediaUpload(fileName, fileSize)
+	createMediaUploadResp, err := c.CreateMediaUpload(ctx, fileName, fileSize)
 	if err != nil {
 		return fmt.Errorf("failed to get presigned URLs: %w", err)
 	}
@@ -269,7 +269,7 @@ func MultipartUpload(ctx context.Context, c *client.Client, filePath, fileName s
 	}
 
 	// Step 3: Complete multipart upload
-	err = c.CompleteMultipartUpload(mediaUpload.ID, uploadID, parts)
+	err = c.CompleteMultipartUpload(ctx, mediaUpload.ID, uploadID, parts)
 	if err != nil {
 		return fmt.Errorf("failed to complete multipart upload: %w", err)
 	}

@@ -1,12 +1,14 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 // testLogger returns a logger that discards output (for tests)
@@ -162,7 +164,7 @@ func TestMe(t *testing.T) {
 
 	client := NewClient(server.URL, "test-key", nil)
 
-	me, err := client.Me()
+	me, err := client.Me(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -206,7 +208,7 @@ func TestCreateMediaUpload(t *testing.T) {
 
 	client := NewClient(server.URL, "test-key", nil)
 
-	resp, err := client.CreateMediaUpload("test.mp4", 1024)
+	resp, err := client.CreateMediaUpload(context.Background(), "test.mp4", 1024)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -244,7 +246,7 @@ func TestListMediaUploads(t *testing.T) {
 
 	client := NewClient(server.URL, "test-key", nil)
 
-	resp, err := client.ListMediaUploads()
+	resp, err := client.ListMediaUploads(context.Background())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -272,8 +274,42 @@ func TestDeleteMediaUpload(t *testing.T) {
 
 	client := NewClient(server.URL, "test-key", nil)
 
-	err := client.DeleteMediaUpload("upload-123")
+	err := client.DeleteMediaUpload(context.Background(), "upload-123")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+// Bug: domain methods sent requests with context.Background(), so Ctrl-C couldn't stop a
+// stalled API call.
+func TestDomainMethodsHonourCancellation(t *testing.T) {
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-release:
+		}
+	}))
+	defer server.Close()
+	defer close(release)
+
+	client := NewClient(server.URL, "test-key", slog.New(slog.NewTextHandler(io.Discard, nil)))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(50*time.Millisecond, cancel)
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := client.Me(ctx)
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("Me() returned no error after its context was cancelled")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Me() still blocked 5s after its context was cancelled")
 	}
 }

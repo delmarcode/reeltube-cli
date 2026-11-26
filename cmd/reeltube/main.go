@@ -44,8 +44,11 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigChan
-		fmt.Println("\nInterrupted, cancelling...")
+		fmt.Fprintln(os.Stderr, "\nInterrupted, cancelling... (press Ctrl-C again to quit now)")
 		cancel()
+		// Hand later signals back to the runtime, so a second Ctrl-C ends the process
+		// even if something ignores the cancelled context.
+		signal.Stop(sigChan)
 	}()
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {

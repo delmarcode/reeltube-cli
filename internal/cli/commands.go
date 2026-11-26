@@ -41,7 +41,7 @@ func NewWhoamiCmd() *cobra.Command {
 		Short:   "Ping the ReelTube API to verify authentication",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := GetConfig(cmd)
-			data, err := cfg.Client.Me()
+			data, err := cfg.Client.Me(cmd.Context())
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
@@ -137,7 +137,7 @@ func NewListCmd() *cobra.Command {
 		Short:   "List your media uploads",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := GetConfig(cmd)
-			resp, err := cfg.Client.ListMediaUploads()
+			resp, err := cfg.Client.ListMediaUploads(cmd.Context())
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
@@ -182,7 +182,7 @@ func NewDeleteCmd() *cobra.Command {
 			id := args[0]
 			cfg := GetConfig(cmd)
 
-			err := cfg.Client.DeleteMediaUpload(id)
+			err := cfg.Client.DeleteMediaUpload(cmd.Context(), id)
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
