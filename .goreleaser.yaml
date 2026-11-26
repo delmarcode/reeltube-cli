@@ -17,6 +17,7 @@ before:
 
 builds:
   - id: "reeltube"
+    main: ./cmd/reeltube
     binary: reeltube
     env:
       - CGO_ENABLED=0

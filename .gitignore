@@ -65,6 +65,8 @@ __debug_bin
 *.so
 
 # Ignore locally build binary
-reeltube
+/reeltube
 
 dist/
+
+private_notes.md
