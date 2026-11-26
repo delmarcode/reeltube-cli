@@ -107,8 +107,10 @@ func main() {
 		return nil
 	}
 
+	// Commands return their errors; print each once here and exit nonzero.
+	rootCmd.SilenceErrors = true
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }

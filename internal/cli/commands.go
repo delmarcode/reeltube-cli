@@ -39,14 +39,15 @@ func NewWhoamiCmd() *cobra.Command {
 		Use:     "whoami",
 		Aliases: []string{"me"},
 		Short:   "Ping the ReelTube API to verify authentication",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
 			cfg := GetConfig(cmd)
 			data, err := cfg.Client.Me(cmd.Context())
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				return err
 			}
 			fmt.Println(data.Profile.Handle)
+			return nil
 		},
 	}
 }
@@ -135,17 +136,17 @@ func NewListCmd() *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List your media uploads",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
 			cfg := GetConfig(cmd)
 			resp, err := cfg.Client.ListMediaUploads(cmd.Context())
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				return err
 			}
 
 			if len(resp.MediaUploads) == 0 {
 				fmt.Println("No media uploads found.")
-				return
+				return nil
 			}
 
 			// Print header
@@ -167,6 +168,7 @@ func NewListCmd() *cobra.Command {
 					u.CreatedAt,
 				)
 			}
+			return nil
 		},
 	}
 }
@@ -178,16 +180,16 @@ func NewDeleteCmd() *cobra.Command {
 		Aliases: []string{"rm"},
 		Short:   "Delete a media upload by ID",
 		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
 			id := args[0]
 			cfg := GetConfig(cmd)
 
-			err := cfg.Client.DeleteMediaUpload(cmd.Context(), id)
-			if err != nil {
-				fmt.Println("Error:", err)
-				return
+			if err := cfg.Client.DeleteMediaUpload(cmd.Context(), id); err != nil {
+				return err
 			}
 			fmt.Printf("Media upload %s deleted successfully.\n", id)
+			return nil
 		},
 	}
 }
