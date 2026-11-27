@@ -17,6 +17,7 @@ before:
 
 builds:
   - id: "reeltube"
+    main: ./cmd/reeltube
     binary: reeltube
     env:
       - CGO_ENABLED=0
@@ -26,6 +27,13 @@ builds:
       - darwin
     flags:
       - -trimpath
+    # The version variables live in internal/cli, so GoReleaser's default
+    # -X main.version=... flags would leave release binaries reporting "dev".
+    ldflags:
+      - -s -w
+      - -X github.com/the-del-mar-code-company/reeltube-cli/internal/cli.Version={{.Version}}
+      - -X github.com/the-del-mar-code-company/reeltube-cli/internal/cli.Commit={{.Commit}}
+      - -X github.com/the-del-mar-code-company/reeltube-cli/internal/cli.Date={{.Date}}
 
 archives:
   - id: "reeltube"
